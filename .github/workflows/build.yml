@@ -19,14 +19,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Make Gradle Executable
-        run: chmod +x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
+        working-directory: ./RemoteDesk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: RemoteDesk-Android5.1-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: RemoteDesk/app/build/outputs/apk/debug/*.apk
