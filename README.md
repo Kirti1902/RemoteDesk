@@ -1,50 +1,59 @@
 # 🖥️ RemoteDock
 
-> Turn your mobile device into a real-time, custom PC command center over your local network.
+> Turn your mobile device into a real-time, low-latency PC command center over your local network.
 
-**RemoteDock** is a lightweight, low-latency remote administration system consisting of a **React Native (Expo)** mobile application and a **Python (Flask)** Windows companion server. It allows host control, low-overhead screen mirroring, media management, hotkey injection, and hardware telemetry without reliance on third-party cloud services or subscriptions.
+**RemoteDock** is a lightweight, full-stack remote system administration tool composed of a **React Native (Expo)** mobile application and a **Python (Flask)** Windows companion server. It provides low-overhead screen mirroring, gesture trackpad control, system volume/brightness regulation, hotkey injection, quick application launching, and live hardware diagnostics—all without third-party cloud dependencies or subscription services.
 
 ---
 
 ## 🛠️ Architecture & Tech Stack
 
+
 ```
-   ┌────────────────────────┐              Local Wi-Fi             ┌────────────────────────┐
-   │ React Native (Expo)    │ ───────────────────────────────────► │ Python (Flask Server)  │
-   │ Mobile Client          │ ◄─────────────────────────────────── │ Windows Host PC        │
-   └────────────────────────┘          HTTP / REST & Base64        └────────────────────────┘
+
+┌────────────────────────┐              Local Wi-Fi             ┌────────────────────────┐
+│ React Native (Expo)    │ ───────────────────────────────────► │ Python (Flask Server)  │
+│ Mobile Client          │ ◄─────────────────────────────────── │ Windows Host PC        │
+└────────────────────────┘          HTTP / REST & Base64        └────────────────────────┘
 
 ```
 
 * **Mobile Client:** React Native, Expo Router, TypeScript, `react-native-reanimated`
-* **Backend Server:** Python 3.8+, Flask, Flask-CORS
-* **Windows API Integration:** `pyautogui`, `pycaw` (COM interfaces for core volume scalar control), `screen-brightness-control`, `mss`, `Pillow (PIL)`, `psutil`
-* **Networking & Protocols:** Local HTTP REST API, base64 JPEG payload streaming, auto IP discovery
+* **Backend Companion Server:** Python 3.8+, Flask, Flask-CORS
+* **Windows API Integration:** `pyautogui`, `pycaw` (Native COM interfaces for `IAudioEndpointVolume`), `screen-brightness-control`, `mss`, `Pillow (PIL)`, `psutil`
+* **Networking & Protocols:** Local HTTP REST API, base64 JPEG payload streaming, low-latency ping telemetry
 
 ---
 
 ## ✨ Features
 
-* 🖱️ **Multitouch Trackpad:** Relative mouse movement, tap-to-click, double-click, two-finger scroll emulation, and haptic feedback.
-* 🎵 **Audio & Display Control:** Master volume adjustments mapping to native Windows endpoints (`IAudioEndpointVolume`) alongside display brightness regulation.
-* ⌨️ **Virtual Keyboard & Hotkey Suite:** System modifier key combinations (Ctrl, Alt, Win, Shift) and 1-tap shortcuts (Task Manager, Lock, Copy/Paste, Screen Grab).
-* 🖥️ **Live Display Mirroring:** Live 2–5 FPS desktop screen capture via `mss` & `PIL` compressed to base64 JPEG strings.
-* 📊 **Hardware Diagnostics:** Real-time polling for CPU utilization, RAM usage, storage allocations, active network throughput ($KB/s$), battery health, and system uptime.
-* 📂 **Custom App Launcher:** Editable application grid to launch native desktop binaries (`.exe`) or web URIs directly on host PC.
-* 📐 **Adaptive UI:** Built for dynamic **Portrait and Landscape** screen orientation modes.
+* 🖱️ **Multitouch Trackpad:** Relative cursor positioning, tap-to-click, double-click, right-click, two-finger scrolling, and dynamic haptic feedback.
+* 🎵 **Media & Display Hardware Sliders:** Granular master volume control interfacing directly with Windows audio endpoints (`pycaw`) and display brightness adjustment (`screen-brightness-control`).
+* ⌨️ **Virtual Keyboard & Hotkey Suite:** System modifier keys (Ctrl, Alt, Win, Shift) and 1-tap macro shortcuts (Task Manager, Desktop Lock, Copy/Paste, Screen Grab, Select All).
+* 🖥️ **Live Display Mirroring:** Low-overhead 2–5 FPS desktop screen stream rendered via high-speed frame capture (`mss`) and PIL compression sent via base64 JPEG strings.
+* 📊 **Real-Time System Diagnostics:** Comprehensive system health dashboard displaying:
+  * Dynamic Battery charge status percentage & charging plug state.
+  * Multi-core CPU utilization percentage.
+  * Detailed RAM allocation breakdown (e.g., `12.2 GB / 15.8 GB`).
+  * Disk partition usage (e.g., `C: drive capacity`).
+  * CPU temperature telemetry (with dynamic fallback).
+  * Real-time network throughput (Upload / Download in `KB/s`) and system uptime counter.
+* 🚀 **Custom Quick Launch Hub:** Editable application launcher grid supporting two modes:
+  * **APP Mode:** Directly launches native Windows binaries (`.exe`) or built-in system tools (Task Manager, Explorer, Calculator, Notepad).
+  * **WEB Mode:** Launches pre-configured URL targets directly inside the default web browser (YouTube, Gmail, custom sites).
+  * **Interactive Edit Mode:** Long-press tile interaction to customize, add, or manage quick shortcuts.
+* 📐 **Adaptive UI Layout:** Complete responsive support for both **Portrait and Landscape** screen orientation modes.
 
 ---
 
 ## 🚀 Setup & Installation
 
-### 1. Host Server Setup (Windows Laptop)
+### 1. Host Companion Server Setup (Windows Host)
 
 #### Prerequisites
-
-* **Python 3.8 or higher** installed and added to `PATH`.
+* **Python 3.8 or higher** installed and added to environment `PATH`.
 
 #### Step 1: Install Dependencies
-
 Open Command Prompt (`cmd`) or PowerShell and run:
 
 ```bash
@@ -52,53 +61,53 @@ pip install flask flask-cors pyautogui pycaw comtypes screen-brightness-control 
 
 ```
 
-#### Step 2: Open Firewall Port (Required)
+#### Step 2: Configure Windows Firewall (Required)
 
-Allow incoming TCP traffic on port `9999` through Windows Firewall. Run Command Prompt as **Administrator**:
+Allow incoming TCP traffic on port `9999`. Run Command Prompt as **Administrator**:
 
 ```cmd
 netsh advfirewall firewall add rule name="RemoteDock" dir=in action=allow protocol=TCP localport=9999
 
 ```
 
-#### Step 3: Run the Server
+#### Step 3: Launch Companion Server
 
-Create a file named `server.py` and paste your backend script. Run it using:
+Create a file named `server.py` and run the script:
 
 ```bash
 python server.py
 
 ```
 
-*(The terminal will output your laptop’s local IP address, e.g., `192.168.1.5`)*
+*(The terminal output will display your host machine's local IP address, e.g., `192.168.1.5:9999`)*
 
 ---
 
-### 2. Mobile Client Setup (App)
+### 2. Mobile Client Setup
 
-#### Option A: Running via Expo (Development)
+#### Option A: Run via Expo (Development)
 
 1. Clone the repository and install dependencies:
 ```bash
-git clone https://github.com/your-username/RemoteDock.git
+git clone [https://github.com/your-username/RemoteDock.git](https://github.com/your-username/RemoteDock.git)
 cd RemoteDock
 npm install
 
 ```
 
 
-2. Start the Expo development server:
+2. Launch the Expo development server:
 ```bash
 npx expo start
 
 ```
 
 
-3. Scan the QR code using **Expo Go** (Android) or run on an emulator.
+3. Scan the generated QR code using **Expo Go** (Android/iOS) or run via an emulator.
 
-#### Option B: Building standalone APK
+#### Option B: Build Standalone APK (Android)
 
-To build an installable Android APK:
+Generate an installable standalone Android binary using Expo Application Services (EAS):
 
 ```bash
 npx eas build -p android --profile preview
@@ -109,21 +118,21 @@ npx eas build -p android --profile preview
 
 ## 🔌 API Endpoints Reference
 
-The companion server runs on `http://<LAPTOP_IP>:9999` by default.
+The companion server listens on `http://<HOST_IP>:9999` by default.
 
-### Health & Monitoring
+### Telemetry & Diagnostics
 
-| Endpoint | Method | Response | Description |
+| Endpoint | Method | Response Payload Format | Description |
 | --- | --- | --- | --- |
-| `/ping` | `GET` | `"ok"` | Health check to verify host connection. |
-| `/status` | `GET` | `JSON` | Fetches CPU, RAM, Disk, Network speeds, Battery state, Temperature, and Uptime telemetry. |
-| `/screenshot` | `GET` | `JSON` | Returns a base64-encoded JPEG image string of the primary display. |
+| `/ping` | `GET` | `"ok"` | Connection heartbeat check. |
+| `/status` | `GET` | `JSON Object` | Returns CPU load, CPU count, RAM used/total/%, Disk used/total/%, Battery %, charging state, network upload/download speeds (`KB/s`), temperature, and total system uptime. |
+| `/screenshot` | `GET` | `JSON Object` | Captures primary display frame and returns a base64-encoded JPEG image string. |
 
-### Command Controller Endpoint
+### System Action Controller
 
 `POST /command`
 
-All system input and action triggers are sent via a single JSON payload route:
+All input events and execution requests pass through a unified command router using structured JSON payloads:
 
 ```json
 {
@@ -133,7 +142,7 @@ All system input and action triggers are sent via a single JSON payload route:
 
 ```
 
-#### Supported Payload Formats:
+#### Supported Payload Models:
 
 * **Mouse Movement:**
 ```json
@@ -142,65 +151,65 @@ All system input and action triggers are sent via a single JSON payload route:
 ```
 
 
-* **Mouse Clicks:**
+* **Mouse Button Clicks:**
 ```json
 { "type": "mouse_click", "data": { "button": "left" } } // Options: "left", "right", "double"
 
 ```
 
 
-* **Scrolling:**
+* **Relative Scrolling:**
 ```json
 { "type": "scroll", "data": { "dy": -50 } }
 
 ```
 
 
-* **Media Controls:**
+* **Media Playback Controls:**
 ```json
 { "type": "media", "data": { "action": "play_pause" } } // Options: "play_pause", "next", "prev", "stop"
 
 ```
 
 
-* **Master Volume Scalar Set:**
+* **Master Volume Set:**
 ```json
-{ "type": "volume_set", "data": { "level": 50 } } // 0-100 percentage
+{ "type": "volume_set", "data": { "level": 50 } } // Integer percentage 0-100
 
 ```
 
 
-* **Display Brightness:**
+* **Display Brightness Set:**
 ```json
-{ "type": "brightness_set", "data": { "level": 70 } } // 0-100 percentage
+{ "type": "brightness_set", "data": { "level": 70 } } // Integer percentage 0-100
 
 ```
 
 
-* **Single Key Press / Combinations:**
+* **Keystroke / Hotkey Combo:**
 ```json
 { "type": "key", "data": { "modifiers": ["ctrl", "alt"], "key": "del" } }
 
 ```
 
 
-* **Text Input Injection:**
+* **Text String Injection:**
 ```json
-{ "type": "text", "data": { "text": "Hello World!" } }
+{ "type": "text", "data": { "text": "Hello RemoteDock!" } }
 
 ```
 
 
-* **Launch Native Application / Executable:**
+* **Launch Native Binary (.EXE / System Command):**
 ```json
 { "type": "launch_app", "data": { "path": "calc.exe" } }
 
 ```
 
 
-* **Open URL in Default Browser:**
+* **Launch Web URL Target:**
 ```json
-{ "type": "open_url", "data": { "url": "https://youtube.com" } }
+{ "type": "open_url", "data": { "url": "[https://youtube.com](https://youtube.com)" } }
 
 ```
 
@@ -208,20 +217,20 @@ All system input and action triggers are sent via a single JSON payload route:
 
 ---
 
-## 🛠️ Common Troubleshooting
+## 🛠️ Troubleshooting
 
-* **App cannot connect to Server:**
-* Ensure both laptop and mobile device are connected to the **same Wi-Fi network**.
-* Confirm that the firewall port rule was executed in Administrator CMD.
-* Verify your host IP using `ipconfig` in CMD.
-
-
-* **Volume control not responding:**
-* Ensure `pycaw` and `comtypes` are properly installed in your active Python environment.
+* **App failing to connect to server:**
+* Confirm both mobile device and PC are on the **same local Wi-Fi network**.
+* Ensure the firewall rule for port `9999` was added successfully via Administrator CMD.
+* Check your laptop's current IPv4 address using `ipconfig` in CMD.
 
 
-* **Screen Mirroring fails (503 Error):**
-* Check that `mss` and `Pillow` packages are installed.
+* **Volume control unresponsive:**
+* Verify `pycaw` and `comtypes` packages are installed in the host Python runtime environment.
+
+
+* **Screen View HTTP 503 Service Unavailable:**
+* Ensure `mss` and `Pillow` are correctly installed on the host server.
 
 
 
@@ -229,10 +238,14 @@ All system input and action triggers are sent via a single JSON payload route:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests to extend features (e.g., WebSockets integration, bi-directional clipboard sync, Wake-on-LAN).
+Contributions are welcome! Pull requests for feature enhancements (such as binary WebSocket streaming, bi-directional clipboard sync, and Wake-on-LAN) are actively encouraged.
 
 ---
 
 ## 📜 License
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+Distributed under the **MIT License**. See `LICENSE` for details.
+
+```
+
+```
